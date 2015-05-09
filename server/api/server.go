@@ -3,13 +3,15 @@ package api
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"gopkg.in/mgo.v2"
 	"log"
 	"net/http"
 )
 
 type Server struct {
-	listen string
-	router *mux.Router
+	listen  string
+	router  *mux.Router
+	session *mgo.Session
 }
 
 type ApiStats struct {
@@ -31,14 +33,15 @@ func welcome(res http.ResponseWriter, req *http.Request) {
 /**
  * Create new HTTP API Server
  */
-func NewServer(listen string) *Server {
+func NewServer(listen string, mongoSession *mgo.Session) *Server {
 
 	log.Println("Starting HTTP API Server @", listen)
 
 	router := mux.NewRouter().StrictSlash(true)
 	server := Server{
-		router: router,
-		listen: listen,
+		router:  router,
+		listen:  listen,
+		session: mongoSession,
 	}
 
 	// Setup routing
