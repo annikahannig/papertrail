@@ -35,14 +35,14 @@ func NotesCreate(res http.ResponseWriter, req *http.Request) {
 	err := JsonParseRequest(req, &note)
 	if err != nil {
 		res.WriteHeader(http.StatusNotAcceptable)
-		fmt.Fprintf(res, "ERROR:", err)
+		fmt.Fprintf(res, "PARSE ERROR:", err)
 		return
 	}
 
 	err = models.InsertNote(&note)
 	if err != nil {
 		res.WriteHeader(http.StatusNotAcceptable)
-		fmt.Fprintf(res, "ERROR:", err)
+		fmt.Fprintf(res, "INSERT ERROR:", err)
 		return
 	}
 

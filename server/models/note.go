@@ -11,11 +11,12 @@ import (
  */
 
 type Note struct {
-	Id        bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	Text      string        `json:"name"`
-	PrintedAt string        `json:"printed_at"`
+	Id        bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+	Text      string        `json:"text"`
+	PrintedAt string        `json:"printedAt"`
+	Draft     bool          `json:"isDraft"`
 
-	CreatedBy bson.ObjectId `json:"created_by_id"`
+	CreatedBy bson.ObjectId `bson:",omitempty" json:"created_by_id"`
 	CreatedAt time.Time     `json:"created_at"`
 }
 
@@ -45,6 +46,7 @@ func InsertNote(note *Note) error {
 
 	// Assert defaults for some fields
 	note.CreatedAt = time.Now()
+	note.Id = bson.NewObjectId()
 
 	err := c.Insert(note)
 
