@@ -1,0 +1,8 @@
+package comm;
+
+message Message {
+  required string from    = 1;
+  required string id      = 2;
+  required string content = 3;
+}
+

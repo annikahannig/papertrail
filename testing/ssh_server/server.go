@@ -134,7 +134,7 @@ func (self *Server) Start() {
 			"[Ssh] New connection from: ",
 			sshConn.RemoteAddr(),
 			"SSH v.",
-			sshConn.ClientVersion(),
+			string(sshConn.ClientVersion()),
 		)
 
 		// Discard OOB requests
