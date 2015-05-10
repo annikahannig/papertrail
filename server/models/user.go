@@ -46,14 +46,21 @@ func NewUser(username string, password string, name string) User {
 	return user
 }
 
-func (self *User) Save() error {
+func (self *User) Save() {
 	self.CreatedAt = time.Now()
-	return nil
+	users := LoadUsers("./data/users.json")
+	users.AddUser(*self)
+	users.Save("./data/users.json")
 }
 
-func AllUsers() (error, []User) {
+func AllUsers() *Users {
+	users := LoadUsers("./data/users.json")
+	return users
+}
 
-	return nil, nil
+func UserById(userid string) User {
+	users := AllUsers()
+	return (*users)[userid]
 }
 
 func AuthenticateUser(username string, password string) bool {

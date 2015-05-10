@@ -17,10 +17,11 @@ import (
 	"log"
 )
 
-func main() {
-
+func init() {
 	log.Println("Papertrail 1.0.0                   (c) 2015 Matthias Hannig")
-	log.Println("Starting server at port: [PORT]")
+}
+
+func main() {
 
 	// Connect to mongodb server
 	session, err := mgo.Dial("localhost")
