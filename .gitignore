@@ -4,3 +4,7 @@
 
 server/server
 
+testing/ssh_server/ssh_server
+testing/ssh_client/ssh_client
+
+testing/ssh_server/id_rsa*
