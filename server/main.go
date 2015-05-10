@@ -12,6 +12,7 @@ package main
 
 import (
 	"github.com/mhannig/papertrail/server/api"
+	"github.com/mhannig/papertrail/server/models"
 	"gopkg.in/mgo.v2"
 	"log"
 )
@@ -30,6 +31,10 @@ func main() {
 	}
 
 	session.SetMode(mgo.Monotonic, true)
+
+	// Connect to dev database
+	db := session.DB("papertrail_dev")
+	models.SetDatabase(db)
 
 	server := api.NewServer(":9999", session)
 	server.Serve()

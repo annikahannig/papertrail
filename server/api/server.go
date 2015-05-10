@@ -46,6 +46,8 @@ func NewServer(listen string, mongoSession *mgo.Session) *Server {
 
 	// Setup routing
 	router.HandleFunc("/", welcome)
+	router.HandleFunc("/v1", welcome)
+	router.HandleFunc("/v1/notes", NotesIndex)
 
 	return &server
 }
