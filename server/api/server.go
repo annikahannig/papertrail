@@ -14,6 +14,12 @@ type Server struct {
 	session *mgo.Session
 }
 
+type Route struct {
+	Method  string
+	Path    string
+	Handler http.HandlerFunc
+}
+
 type ApiStats struct {
 	Version string `json:"version"`
 	Author  string `json:"author"`
@@ -45,9 +51,29 @@ func NewServer(listen string, mongoSession *mgo.Session) *Server {
 	}
 
 	// Setup routing
-	router.HandleFunc("/", welcome)
-	router.HandleFunc("/v1", welcome)
-	router.HandleFunc("/v1/notes", NotesIndex)
+	routes := []Route{
+		Route{
+			"GET", "/", welcome,
+		},
+		Route{
+			"GET", "/v1", welcome,
+		},
+		Route{
+			"GET", "/v1/notes", NotesIndex,
+		},
+		Route{
+			"POST", "/v1/notes", NotesCreate,
+		},
+	}
+
+	log.Println("Installing routes:")
+	for _, route := range routes {
+		log.Println(route.Method, "\t", route.Path)
+		router.
+			Methods(route.Method).
+			Path(route.Path).
+			Handler(route.Handler)
+	}
 
 	return &server
 }
