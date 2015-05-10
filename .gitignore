@@ -3,6 +3,7 @@
 *.swo
 
 server/server
+server/data/users.json
 
 testing/ssh_server/ssh_server
 testing/ssh_client/ssh_client

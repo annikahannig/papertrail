@@ -16,8 +16,8 @@ type Note struct {
 	PrintedAt string        `json:"printedAt"`
 	Draft     bool          `json:"isDraft"`
 
-	CreatedBy bson.ObjectId `bson:",omitempty" json:"created_by_id"`
-	CreatedAt time.Time     `json:"created_at"`
+	CreatedById string    `json:"createdById"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 /**
@@ -29,7 +29,7 @@ func AllNotes() []Note {
 	// Get notes from collection
 	c := db.C("notes")
 
-	err := c.Find(bson.M{}).Sort("-CreatedAt").All(&result)
+	err := c.Find(bson.M{}).Sort("+CreatedAt").All(&result)
 	if err != nil {
 		log.Println("[DB] Error while fetching notes.")
 	}
