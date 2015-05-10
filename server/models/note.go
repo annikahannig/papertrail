@@ -17,7 +17,8 @@ type Note struct {
 	Draft     bool          `json:"isDraft"`
 
 	CreatedById string    `json:"createdById"`
-	CreatedAt   time.Time `json:"created_at"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt,omitempty"`
 }
 
 /**
@@ -38,6 +39,30 @@ func AllNotes() []Note {
 }
 
 /**
+ * Create new note
+ */
+func NewNote(text string, user User) Note {
+	note := Note{
+		Text:        text,
+		CreatedById: user.Id,
+	}
+
+	return note
+}
+
+func (self *Note) Save() error {
+	if &self.Id == nil {
+		// New Note: Insert.
+		err := InsertNote(self)
+		return err
+	} else {
+		// Update Note
+		err := UpdateNote(self)
+		return err
+	}
+}
+
+/**
  * Insert Note
  */
 func InsertNote(note *Note) error {
@@ -50,5 +75,18 @@ func InsertNote(note *Note) error {
 
 	err := c.Insert(note)
 
+	return err
+}
+
+/**
+ * Update note
+ */
+func UpdateNote(note *Note) error {
+	// Get notes from collection
+	c := db.C("notes")
+
+	// Assert defaults for some fields
+	note.UpdatedAt = time.Now()
+	err := c.UpdateId(note.Id, note)
 	return err
 }
