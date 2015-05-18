@@ -13,7 +13,7 @@ import (
  * (c) 2015 Matthias Hannig
  */
 type Session struct {
-	Id        bson.ObjectId `bson:"_id" json:"id"`
+	Id        bson.ObjectId `bson:"_id,omitempty" json:"id"`
 	Token     string        `json:"token"`
 	UserId    string        `json:"userId"`
 	Lifetime  time.Duration `json:"lifetime"`
@@ -25,8 +25,8 @@ type Session struct {
 /**
  * Get associated user
  */
-func (self *Session) User() User {
-	return UserById(self.UserId)
+func (self *Session) User() (*User, error) {
+	return FindUserById(self.UserId)
 }
 
 /**
@@ -44,15 +44,16 @@ func (self *Session) Save() error {
 	var err error
 	c := db.C("sessions")
 
-	if &self.Id == nil {
-		// Insert fresh session
-		self.CreatedAt = time.Now()
-		self.Id = bson.NewObjectId()
-		err = c.Insert(self)
-	} else {
+	if self.Id.Valid() {
 		// Update session
 		self.UpdatedAt = time.Now()
-		err = c.UpdateId(&self.Id, self)
+		err = c.UpdateId(self.Id, self)
+	} else {
+		// Insert fresh session
+		self.CreatedAt = time.Now()
+		self.TouchedAt = time.Now()
+		self.Id = bson.NewObjectId()
+		err = c.Insert(self)
 	}
 
 	return err
@@ -83,10 +84,9 @@ func (self *Session) TTL() time.Duration {
  * Create session
  */
 func NewSession(userId string) *Session {
-	randomToken := uniuri.NewLen(32)
+	randomToken := uniuri.NewLen(48)
 
 	session := Session{
-		Id:       bson.NewObjectId(),
 		Token:    randomToken,
 		UserId:   userId,
 		Lifetime: time.Second * 500,
@@ -102,6 +102,6 @@ func NewSession(userId string) *Session {
 func FindSessionByToken(sessionToken string) (*Session, error) {
 	session := Session{}
 	c := db.C("sessions")
-	err := c.Find(bson.M{"Token": sessionToken}).One(&session)
+	err := c.Find(bson.M{"token": sessionToken}).One(&session)
 	return &session, err
 }

@@ -42,14 +42,13 @@ func AuthSessionToken(app http.Handler) http.Handler {
 					continue
 				}
 
+				// Check if session is expired.
 				if session.TTL() == 0 {
-					log.Println("[Session] Session expired.")
 					continue
 				}
 
 				// Looks like we have some valid session. Hooray.
 				SetCurrentSession(req, session)
-
 			}
 		}
 
