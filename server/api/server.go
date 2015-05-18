@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"github.com/mhannig/papertrail/server/api/middleware"
 	"gopkg.in/mgo.v2"
 	"log"
 	"net/http"
@@ -72,7 +73,7 @@ func NewServer(listen string, mongoSession *mgo.Session) *Server {
 		router.
 			Methods(route.Method).
 			Path(route.Path).
-			Handler(route.Handler)
+			Handler(middleware.AuthSessionToken(route.Handler))
 	}
 
 	return &server
