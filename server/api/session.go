@@ -1,8 +1,8 @@
 package api
 
 import (
-	"encoding/json"
 	"github.com/mhannig/papertrail/server/api/middleware"
+	"github.com/mhannig/papertrail/server/models"
 	"log"
 	"net/http"
 )
@@ -18,11 +18,11 @@ type SessionCredentials struct {
 func SessionShow(res http.ResponseWriter, req *http.Request) {
 	session, err := middleware.CurrentSession(req)
 	if err != nil {
-		JsonResponseError(res, 403, "Session not authorized.", 403)
+		JsonResponseError(res, 403, err, 403)
 		return
 	}
 
-	json.NewEncoder(res).Encode(session)
+	JsonResponseSuccess(res, session)
 }
 
 /**
@@ -30,14 +30,35 @@ func SessionShow(res http.ResponseWriter, req *http.Request) {
  */
 func SessionCreate(res http.ResponseWriter, req *http.Request) {
 	credentials := SessionCredentials{}
+	err := JsonParseRequest(req, &credentials)
+	if err != nil {
+		JsonResponseError(res, 403, "invalid_credentials", 403)
+		return
+	}
 
-	log.Println("Go credentials:", credentials)
+	// Try to authenticate user
+	user, err := models.AuthenticateUser(credentials.Username, credentials.Password)
+	if err != nil {
+		JsonResponseError(res, 403, err, 403)
+		return
+	}
+
+	// Create new Session
+	session := models.NewSession(user.Username)
+	err = session.Save()
+	if err != nil {
+		JsonResponseError(res, 500, err, 500)
+		return
+	}
+
+	JsonResponseSuccess(res, session)
 }
 
 /**
  * DELETE /v1/session
  */
 func SessionDestroy(res http.ResponseWriter, req *http.Request) {
+	log.Println("session delete.")
 	session, err := middleware.CurrentSession(req)
 	if err != nil {
 		JsonResponseError(res, 403, "Session not authorized.", 403)
