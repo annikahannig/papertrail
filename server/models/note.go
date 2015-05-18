@@ -51,15 +51,14 @@ func NewNote(text string, user User) Note {
 }
 
 func (self *Note) Save() error {
-	if &self.Id == nil {
-		// New Note: Insert.
-		err := InsertNote(self)
-		return err
-	} else {
+	if self.Id.Valid() {
 		// Update Note
 		err := UpdateNote(self)
-		return err
+	} else {
+		// New Note: Insert.
+		err := InsertNote(self)
 	}
+	return err
 }
 
 /**
