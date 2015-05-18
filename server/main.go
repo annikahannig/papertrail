@@ -11,11 +11,26 @@ package main
  */
 
 import (
+	"flag"
+	"github.com/BurntSushi/toml"
 	"github.com/mhannig/papertrail/server/api"
 	"github.com/mhannig/papertrail/server/models"
 	"gopkg.in/mgo.v2"
 	"log"
 )
+
+/**
+ * Config
+ */
+type config struct {
+	Listen  string
+	Mongodb mongodbConfig
+}
+
+type mongodbConfig struct {
+	Host string
+	Db   string
+}
 
 func init() {
 	log.Println("Papertrail 1.0.0                   (c) 2015 Matthias Hannig")
@@ -23,8 +38,20 @@ func init() {
 
 func main() {
 
+	// Flags
+	configFilename := flag.String("config", "./data/papertrail.conf", "Configuration file")
+
+	flag.Parse()
+
+	// Load config
+	var cfg config
+	_, err := toml.DecodeFile(*configFilename, &cfg)
+	if err != nil {
+		log.Fatal("[Config] Could not open config:", err)
+	}
+
 	// Connect to mongodb server
-	session, err := mgo.Dial("localhost")
+	session, err := mgo.Dial(cfg.Mongodb.Host)
 	defer session.Close()
 
 	if err != nil {
@@ -34,9 +61,9 @@ func main() {
 	session.SetMode(mgo.Monotonic, true)
 
 	// Connect to dev database
-	db := session.DB("papertrail_dev")
+	db := session.DB(cfg.Mongodb.Db)
 	models.SetDatabase(db)
 
-	server := api.NewServer(":9999", session)
+	server := api.NewServer(cfg.Listen, session)
 	server.Serve()
 }
