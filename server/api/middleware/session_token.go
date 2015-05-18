@@ -47,6 +47,9 @@ func AuthSessionToken(app http.Handler) http.Handler {
 					continue
 				}
 
+				// Everythings fine? Make sure the session is up to date.
+				session.Touch()
+
 				// Looks like we have some valid session. Hooray.
 				SetCurrentSession(req, session)
 			}
