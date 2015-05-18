@@ -59,6 +59,17 @@ func NewServer(listen string, mongoSession *mgo.Session) *Server {
 		Route{
 			"GET", "/v1", welcome,
 		},
+		// Sessions
+		Route{
+			"GET", "/v1/session", SessionShow,
+		},
+		Route{
+			"POST", "/v1/session", SessionCreate,
+		},
+		Route{
+			"DELETE", "/v1/session", SessionDestroy,
+		},
+		// Notes
 		Route{
 			"GET", "/v1/notes", NotesIndex,
 		},

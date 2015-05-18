@@ -30,21 +30,26 @@ func NotesIndex(res http.ResponseWriter, req *http.Request) {
  */
 func NotesCreate(res http.ResponseWriter, req *http.Request) {
 	var note models.Note
-	res.Header().Set("Content-Type", "application/json")
 
 	err := JsonParseRequest(req, &note)
 	if err != nil {
-		res.WriteHeader(http.StatusNotAcceptable)
-		fmt.Fprintf(res, "PARSE ERROR:", err)
+		JsonResponseError(
+			res,
+			500,
+			fmt.Sprintf("PARSE ERROR: %s", err),
+			http.StatusNotAcceptable)
 		return
 	}
 
 	err = models.InsertNote(&note)
 	if err != nil {
-		res.WriteHeader(http.StatusNotAcceptable)
-		fmt.Fprintf(res, "INSERT ERROR:", err)
+		JsonResponseError(
+			res,
+			500,
+			fmt.Sprintf("INSERT ERROR: %s", err),
+			http.StatusNotAcceptable)
 		return
 	}
 
-	json.NewEncoder(res).Encode(note)
+	JsonResponseSuccess(res, note)
 }

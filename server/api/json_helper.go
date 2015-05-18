@@ -8,6 +8,11 @@ import (
 	"net/http"
 )
 
+type JsonErrorResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 func JsonParseRequest(req *http.Request, result interface{}) error {
 	// Get request body
 	body, err := ioutil.ReadAll(io.LimitReader(req.Body, 1048576))
@@ -30,4 +35,21 @@ func JsonParseRequest(req *http.Request, result interface{}) error {
 	}
 
 	return nil
+}
+
+func JsonResponseSuccess(res http.ResponseWriter, message interface{}) {
+	res.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(res).Encode(message)
+}
+
+func JsonResponseError(res http.ResponseWriter, code int, message string, status int) {
+	res.Header().Set("Content-Type", "application/json")
+	msg, err := json.Marshal(JsonErrorResponse{
+		Code:    code,
+		Message: message})
+	if err != nil {
+		log.Println("[Error] Could not encode error:", err)
+		return
+	}
+	http.Error(res, string(msg), status)
 }

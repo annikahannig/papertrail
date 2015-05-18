@@ -52,9 +52,18 @@ func (self *Session) Save() error {
 	} else {
 		// Update session
 		self.UpdatedAt = time.Now()
-		err = c.UpdateId(self.Id, self)
+		err = c.UpdateId(&self.Id, self)
 	}
 
+	return err
+}
+
+/**
+ * Destroy Session
+ */
+func (self *Session) Destroy() error {
+	c := db.C("sessions")
+	err := c.RemoveId(&self.Id)
 	return err
 }
 

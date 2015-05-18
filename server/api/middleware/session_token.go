@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"github.com/gorilla/context"
 	"github.com/mhannig/papertrail/server/models"
 	"log"
@@ -61,10 +62,10 @@ func SetCurrentSession(req *http.Request, session *models.Session) {
 	context.Set(req, SessionKey, session)
 }
 
-func CurrentSession(req *http.Request) *models.Session {
+func CurrentSession(req *http.Request) (*models.Session, error) {
 	session := context.Get(req, SessionKey)
 	if session != nil {
-		return session.(*models.Session)
+		return session.(*models.Session), nil
 	}
-	return nil
+	return nil, errors.New("Session not authorized.")
 }
