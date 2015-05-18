@@ -14,4 +14,5 @@ func TestNewUser(t *testing.T) {
 	users.Save("../data/test_users.json")
 
 	fmt.Println(*users)
+
 }

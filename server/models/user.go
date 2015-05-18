@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"io/ioutil"
 	"log"
@@ -19,9 +20,9 @@ type User struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-type Users map[string]User
+type Users map[string]*User
 
-func NewUser(username string, password string, name string) User {
+func NewUser(username string, password string, name string) *User {
 
 	// Generate random ID
 	id := make([]byte, 16)
@@ -43,14 +44,18 @@ func NewUser(username string, password string, name string) User {
 		Name:     name,
 	}
 
-	return user
+	return &user
 }
 
 func (self *User) Save() {
 	self.CreatedAt = time.Now()
 	users := LoadUsers("./data/users.json")
-	users.AddUser(*self)
+	users.AddUser(self)
 	users.Save("./data/users.json")
+}
+
+func (self *User) Authenticate(password string) error {
+	return bcrypt.CompareHashAndPassword(self.Password, []byte(password))
 }
 
 func AllUsers() *Users {
@@ -58,14 +63,30 @@ func AllUsers() *Users {
 	return users
 }
 
-func UserById(userid string) User {
+func FindUserById(userid string) (*User, error) {
 	users := AllUsers()
-	return (*users)[userid]
+	user := (*users)[userid]
+	if user == nil {
+		return nil, errors.New("Not found")
+	} else {
+		return user, nil
+	}
 }
 
-func AuthenticateUser(username string, password string) bool {
+func AuthenticateUser(username string, password string) (*User, error) {
+	// Load user by username from db
+	user, err := FindUserById(username)
+	if err != nil {
+		return nil, err
+	}
 
-	return false
+	// Check password
+	err = user.Authenticate(password)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (self *Users) Save(filename string) {
@@ -80,7 +101,8 @@ func (self *Users) Save(filename string) {
 	}
 }
 
-func (self *Users) AddUser(user User) {
+func (self *Users) AddUser(user *User) {
+	user.CreatedAt = time.Now()
 	(*self)[user.Username] = user
 }
 
