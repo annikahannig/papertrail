@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -9,8 +10,8 @@ import (
 )
 
 type JsonErrorResponse struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+	Code    int         `json:"code"`
+	Message interface{} `json:"message"`
 }
 
 func JsonParseRequest(req *http.Request, result interface{}) error {
@@ -42,11 +43,11 @@ func JsonResponseSuccess(res http.ResponseWriter, message interface{}) {
 	json.NewEncoder(res).Encode(message)
 }
 
-func JsonResponseError(res http.ResponseWriter, code int, message string, status int) {
+func JsonResponseError(res http.ResponseWriter, code int, message interface{}, status int) {
 	res.Header().Set("Content-Type", "application/json")
 	msg, err := json.Marshal(JsonErrorResponse{
 		Code:    code,
-		Message: message})
+		Message: fmt.Sprintf("%s", message)})
 	if err != nil {
 		log.Println("[Error] Could not encode error:", err)
 		return
