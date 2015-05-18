@@ -32,14 +32,20 @@ type mongodbConfig struct {
 	Db   string
 }
 
+/**
+ * Initialize Papertrail and display some banner.
+ */
 func init() {
-	log.Println("Papertrail 1.0.0                   (c) 2015 Matthias Hannig")
+	log.Println("Papertrail 1.0.0               (c) 2015 Matthias Hannig")
 }
 
 func main() {
 
 	// Flags
-	configFilename := flag.String("config", "./data/papertrail.conf", "Configuration file")
+	configFilename := flag.String(
+		"config",
+		"./data/papertrail.conf",
+		"Configuration file")
 
 	flag.Parse()
 
