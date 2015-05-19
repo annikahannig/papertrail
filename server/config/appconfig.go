@@ -8,9 +8,10 @@ import (
  * Config
  */
 type AppConfig struct {
-	Listen  string
-	Debug   bool
-	Mongodb MongodbConfig
+	HttpListen string
+	SshListen  string
+	Debug      bool
+	Mongodb    MongodbConfig
 }
 
 type MongodbConfig struct {

@@ -24,7 +24,7 @@ import (
  * Initialize Papertrail and display some banner.
  */
 func init() {
-	log.Println("Papertrail 1.0.0               (c) 2015 Matthias Hannig")
+	log.Println("Papertrail 1.0.0                   (c) 2015 Matthias Hannig")
 }
 
 func main() {
@@ -61,12 +61,20 @@ func main() {
 	go func() {
 		log.Println("[Schedule] Running timed tasks")
 
-		// Remove old sessions
-		models.ClearStaleSessions()
+		for {
+			// Remove old sessions
+			models.ClearStaleSessions()
 
-		time.Sleep(5 * time.Minute)
+			time.Sleep(5 * time.Minute)
+		}
 	}()
 
-	server := api.NewServer(appconfig.Cfg.Listen, session)
-	server.Serve()
+	// Start HTTP Server
+	go func() {
+		server := api.NewServer(appconfig.Cfg.HttpListen, session)
+		server.Serve()
+	}()
+
+	// Start SSH Server
+
 }
