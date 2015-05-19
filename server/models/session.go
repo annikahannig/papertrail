@@ -3,6 +3,7 @@ package models
 import (
 	"github.com/dchest/uniuri"
 	"gopkg.in/mgo.v2/bson"
+	"log"
 	"time"
 )
 
@@ -20,6 +21,16 @@ type Session struct {
 	CreatedAt time.Time     `json:"createdAt"`
 	UpdatedAt time.Time     `json:"updatedAt"`
 	TouchedAt time.Time     `json:"touchedAt"`
+}
+
+/**
+ * Get all sessions
+ */
+func AllSessions() ([]Session, error) {
+	var result []Session
+	c := db.C("sessions")
+	err := c.Find(bson.M{}).Sort("+CreatedAt").All(&result)
+	return result, err
 }
 
 /**
@@ -104,4 +115,23 @@ func FindSessionByToken(sessionToken string) (*Session, error) {
 	c := db.C("sessions")
 	err := c.Find(bson.M{"token": sessionToken}).One(&session)
 	return &session, err
+}
+
+/**
+ * Clear sessions
+ */
+func ClearStaleSessions() {
+	log.Println("[Sessions] Clearing stale sessions")
+	sessions, err := AllSessions()
+	if err != nil {
+		log.Println("[Sessions] Could not get sessions.")
+		return
+	}
+
+	for _, session := range sessions {
+		if session.TTL() == 0 {
+			log.Println("[Sessions] Clearing session:", session.Id)
+			session.Destroy()
+		}
+	}
 }

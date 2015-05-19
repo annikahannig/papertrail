@@ -12,25 +12,13 @@ package main
 
 import (
 	"flag"
-	"github.com/BurntSushi/toml"
 	"github.com/mhannig/papertrail/server/api"
+	"github.com/mhannig/papertrail/server/config"
 	"github.com/mhannig/papertrail/server/models"
 	"gopkg.in/mgo.v2"
 	"log"
+	"time"
 )
-
-/**
- * Config
- */
-type config struct {
-	Listen  string
-	Mongodb mongodbConfig
-}
-
-type mongodbConfig struct {
-	Host string
-	Db   string
-}
 
 /**
  * Initialize Papertrail and display some banner.
@@ -50,14 +38,13 @@ func main() {
 	flag.Parse()
 
 	// Load config
-	var cfg config
-	_, err := toml.DecodeFile(*configFilename, &cfg)
+	err := appconfig.Load(*configFilename)
 	if err != nil {
 		log.Fatal("[Config] Could not open config:", err)
 	}
 
 	// Connect to mongodb server
-	session, err := mgo.Dial(cfg.Mongodb.Host)
+	session, err := mgo.Dial(appconfig.Cfg.Mongodb.Host)
 	defer session.Close()
 
 	if err != nil {
@@ -67,9 +54,19 @@ func main() {
 	session.SetMode(mgo.Monotonic, true)
 
 	// Connect to dev database
-	db := session.DB(cfg.Mongodb.Db)
+	db := session.DB(appconfig.Cfg.Mongodb.Db)
 	models.SetDatabase(db)
 
-	server := api.NewServer(cfg.Listen, session)
+	// Install Timers
+	go func() {
+		log.Println("[Schedule] Running timed tasks")
+
+		// Remove old sessions
+		models.ClearStaleSessions()
+
+		time.Sleep(5 * time.Minute)
+	}()
+
+	server := api.NewServer(appconfig.Cfg.Listen, session)
 	server.Serve()
 }
