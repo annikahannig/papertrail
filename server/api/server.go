@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/mhannig/papertrail/server/api/middleware"
+	"github.com/mhannig/papertrail/server/config"
 	"gopkg.in/mgo.v2"
 	"log"
 	"net/http"
@@ -78,6 +79,12 @@ func NewServer(listen string, mongoSession *mgo.Session) *Server {
 		},
 	}
 
+	debugRoutes := []Route{
+		Route{
+			"GET", "/v1/sessions", SessionsIndex,
+		},
+	}
+
 	log.Println("Installing routes:")
 	for _, route := range routes {
 		log.Println(route.Method, "\t", route.Path)
@@ -85,6 +92,17 @@ func NewServer(listen string, mongoSession *mgo.Session) *Server {
 			Methods(route.Method).
 			Path(route.Path).
 			Handler(middleware.AuthSessionToken(route.Handler))
+	}
+
+	if appconfig.Cfg.Debug {
+		log.Println("Installing debug routes:")
+		for _, route := range debugRoutes {
+			log.Println(route.Method, "\t", route.Path)
+			router.
+				Methods(route.Method).
+				Path(route.Path).
+				Handler(middleware.AuthSessionToken(route.Handler))
+		}
 	}
 
 	return &server

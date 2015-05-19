@@ -13,6 +13,21 @@ type SessionCredentials struct {
 }
 
 /**
+ * Debug endpoint. This should be disabled in production.
+ * List all sessions with tokens.
+ *
+ * GET /v1/sessions
+ */
+func SessionsIndex(res http.ResponseWriter, req *http.Request) {
+	sessions, err := models.AllSessions()
+	if err != nil {
+		JsonResponseError(res, 500, err, 500)
+		return
+	}
+	JsonResponseSuccess(res, sessions)
+}
+
+/**
  * GET /v1/session
  */
 func SessionShow(res http.ResponseWriter, req *http.Request) {
