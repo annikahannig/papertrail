@@ -71,3 +71,8 @@ func CurrentSession(req *http.Request) (*models.Session, error) {
 	}
 	return nil, errors.New("Session not authorized.")
 }
+
+func AssertAuthenticated(req *http.Request) error {
+	_, err := CurrentSession(req)
+	return err
+}

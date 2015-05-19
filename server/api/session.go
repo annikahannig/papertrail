@@ -24,7 +24,11 @@ func SessionsIndex(res http.ResponseWriter, req *http.Request) {
 		JsonResponseError(res, 500, err, 500)
 		return
 	}
-	JsonResponseSuccess(res, sessions)
+	if len(sessions) > 0 {
+		JsonResponseSuccess(res, sessions)
+	} else {
+		JsonRawResponseSuccess(res, "[]")
+	}
 }
 
 /**

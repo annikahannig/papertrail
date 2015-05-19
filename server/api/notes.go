@@ -1,10 +1,9 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/mhannig/papertrail/server/api/middleware"
 	"github.com/mhannig/papertrail/server/models"
-	"log"
 	"net/http"
 )
 
@@ -13,15 +12,13 @@ import (
  * List all notes in DB.
  */
 func NotesIndex(res http.ResponseWriter, req *http.Request) {
-	log.Println("GET /v1/notes")
-
-	notes := models.AllNotes()
-	res.Header().Set("Content-Type", "application/json")
-	if len(notes) == 0 {
-		res.Write([]byte("[]"))
-	} else {
-		json.NewEncoder(res).Encode(notes)
+	err := middleware.AssertAuthenticated(req)
+	if err != nil {
+		JsonResponseError(res, 403, err, 403)
+		return
 	}
+	notes := models.AllNotes()
+	JsonResponseSuccess(res, notes)
 }
 
 /**
@@ -30,8 +27,13 @@ func NotesIndex(res http.ResponseWriter, req *http.Request) {
  */
 func NotesCreate(res http.ResponseWriter, req *http.Request) {
 	var note models.Note
+	err := middleware.AssertAuthenticated(req)
+	if err != nil {
+		JsonResponseError(res, 403, err, 403)
+		return
+	}
 
-	err := JsonParseRequest(req, &note)
+	err = JsonParseRequest(req, &note)
 	if err != nil {
 		JsonResponseError(
 			res,

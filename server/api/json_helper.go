@@ -43,6 +43,11 @@ func JsonResponseSuccess(res http.ResponseWriter, message interface{}) {
 	json.NewEncoder(res).Encode(message)
 }
 
+func JsonRawResponseSuccess(res http.ResponseWriter, message string) {
+	res.Header().Set("Content-Type", "application/json")
+	res.Write([]byte(message))
+}
+
 func JsonResponseError(res http.ResponseWriter, code int, message interface{}, status int) {
 	res.Header().Set("Content-Type", "application/json")
 	msg, err := json.Marshal(JsonErrorResponse{
