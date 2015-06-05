@@ -1,8 +1,11 @@
 package sshServer
 
 import (
+	"fmt"
 	"golang.org/x/crypto/ssh"
+	"io/ioutil"
 	"log"
+	"net"
 )
 
 type Server struct {
@@ -35,10 +38,9 @@ func loadPrivateKey(keyFile string) ssh.Signer {
 	return key
 }
 
-func (self *Server) Serve() {
-	log.Println("[SSH] Starting SSH Server @", self.Listen)
-}
-
+/**
+ * Create new SSH Server
+ */
 func NewSshServer(listen string, privateKeyFilename string) *Server {
 	server := Server{
 		Config: &ssh.ServerConfig{
@@ -48,8 +50,88 @@ func NewSshServer(listen string, privateKeyFilename string) *Server {
 	}
 
 	// Load Private Key
-	privateKey := loadPrivateKey(privateKeyFile)
+	privateKey := loadPrivateKey(privateKeyFilename)
 	server.Config.AddHostKey(privateKey)
 
-	return nil
+	return &server
+}
+
+/**
+ * SSH Server Main
+ */
+func (self *Server) Serve() {
+	log.Println("[SSH] Starting SSH Server @", self.Listen)
+	tcpServer, err := net.Listen("tcp", self.Listen)
+	if err != nil {
+		log.Fatal("[SSH] Could not listen on configured address:", err)
+	}
+
+	// Handle TCP connections
+	for {
+		conn, err := tcpServer.Accept()
+		if err != nil {
+			log.Println("[SSH] Accept() failed:", err)
+			continue // accept next connection
+		}
+
+		// Perform SSH handshake
+		sshConn, chans, reqs, err := ssh.NewServerConn(conn, self.Config)
+		if err != nil {
+			log.Println(
+				"[SSH] Handshake failed for connection:",
+				conn.RemoteAddr(), " - ", err,
+			)
+			continue
+		}
+
+		// Everything is fine: We have a TCP connection and performed
+		// a succesfull SSH handshake.
+		log.Println(
+			"[SSH] New connection from:", sshConn.RemoteAddr(),
+			"SSH v.", string(sshConn.ClientVersion()),
+		)
+
+		// Discard OOB requests
+		go ssh.DiscardRequests(reqs)
+
+		// Handle SSH channels
+		go self.handleChannels(chans)
+	}
+}
+
+/**
+ * Establish SSH channels
+ */
+func (self *Server) handleChannels(channels <-chan ssh.NewChannel) {
+	for newChannel := range channels {
+		// Only allow session channeltypes
+		if newChannel.ChannelType() != "session" {
+			newChannel.Reject(
+				ssh.UnknownChannelType,
+				"ERROR: The server only accepts session channels",
+			)
+			continue
+		}
+
+		// Accept this channel
+		channel, _, err := newChannel.Accept()
+		if err != nil {
+			log.Println("[SSH] Channel Accept() failed:", err)
+			continue
+		}
+
+		// Everything is fine: We have a TCP connection,
+		// a successfully established SSH connection
+		// and an open SSH channel.
+		go self.handleSession(channel)
+
+	}
+}
+
+/**
+ * Handle a single ssh session on a channel
+ */
+func (self *Server) handleSession(channel ssh.Channel) {
+	banner := "Nothing to see here. yet."
+	channel.Write([]byte(banner))
 }
