@@ -1,0 +1,7 @@
+
+
+# Ignore SSH files
+
+id_rsa*
+
+
