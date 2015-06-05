@@ -77,6 +77,13 @@ func NewServer(listen string, mongoSession *mgo.Session) *Server {
 		Route{
 			"POST", "/v1/notes", NotesCreate,
 		},
+		// Connected Nodes
+		Route{
+			"GET", "/v1/nodes", NodesIndex,
+		},
+		Route{
+			"GET", "/v1/nodes/{nodeId}", NodeShow,
+		},
 	}
 
 	debugRoutes := []Route{
