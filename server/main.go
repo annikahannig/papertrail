@@ -15,6 +15,7 @@ import (
 	"github.com/mhannig/papertrail/server/api"
 	"github.com/mhannig/papertrail/server/config"
 	"github.com/mhannig/papertrail/server/models"
+	"github.com/mhannig/papertrail/server/ssh"
 	"gopkg.in/mgo.v2"
 	"log"
 	"time"
@@ -71,10 +72,18 @@ func main() {
 
 	// Start HTTP Server
 	go func() {
-		server := api.NewServer(appconfig.Cfg.HttpListen, session)
-		server.Serve()
+		apiServer := api.NewServer(
+			appconfig.Cfg.Api.Listen,
+			session,
+		)
+		apiServer.Serve()
 	}()
 
 	// Start SSH Server
+	sshServer := sshServer.NewSshServer(
+		appconfig.Cfg.Ssh.Listen,
+		appconfig.Cfg.Ssh.PrivateKeyFile,
+	)
 
+	sshServer.Serve()
 }
