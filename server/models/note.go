@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"gopkg.in/mgo.v2/bson"
 	"log"
 	"time"
@@ -60,6 +61,18 @@ func (self *Note) Save() error {
 		err = InsertNote(self)
 	}
 	return err
+}
+
+/**
+ * Access user via created by id
+ */
+func (self *Note) CreatedBy() (*User, error) {
+	if self.CreatedById == "" {
+		return nil, errors.New("user not set for note")
+	}
+	user, err := FindUserById(self.CreatedById)
+
+	return user, err
 }
 
 /**
