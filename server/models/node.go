@@ -13,11 +13,14 @@ type Node struct {
 	Addr     net.Addr `json:"addr"`
 }
 
-var ConnectedNodes []*Node
+type NodeList []*Node
+
+// Global list of connected nodes
+var ConnectedNodes NodeList
 
 func init() {
 	// Initialize Nodes Slice
-	ConnectedNodes = make([]*Node, 0, 10)
+	ConnectedNodes = make(NodeList, 0, 10)
 }
 
 func RegisterNode(node *Node) {
@@ -43,4 +46,18 @@ func UnregisterNode(node *Node) {
 	}
 
 	log.Println("[Nodes] Removed connected node id:", node.Id)
+}
+
+/**
+ * Look for node with ID in connected node list.
+ */
+func FindNodeById(id string) *Node {
+	var res *Node
+	for _, node := range ConnectedNodes {
+		if node.Id == id {
+			res = node
+			break
+		}
+	}
+	return res
 }
