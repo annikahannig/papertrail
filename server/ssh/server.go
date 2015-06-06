@@ -45,7 +45,7 @@ func loadPrivateKey(keyFile string) ssh.Signer {
 func NewSshServer(listen string, privateKeyFilename string) *Server {
 	server := Server{
 		Config: &ssh.ServerConfig{
-		//	PasswordCallback: authHandlePassword,
+			PasswordCallback: authHandlePassword,
 		},
 		Listen: listen,
 	}
@@ -130,7 +130,7 @@ func (self *Server) handleChannels(node *models.Node, channels <-chan ssh.NewCha
 		// Everything is fine: We have a TCP connection,
 		// a successfully established SSH connection
 		// and an open SSH channel.
-		go self.handleSession(channel)
+		go self.handleSession(node, channel)
 	}
 }
 
@@ -144,6 +144,15 @@ func (self *Server) handleSession(node *models.Node, channel ssh.Channel) {
 	// BYTES[5..]:  packed (protobuf) message (4294967296 bytes max)
 
 	// Send server info
+	info := MsgServerInfo{
+		"1.0.2",
+		"Papertrail for the win.",
+		2,
+		1,
+	}
+
+	msg, _ := EncodeMessage(M_SERVER_INFO, info)
+	channel.Write(msg)
 
 	// Read, decode, eval message loop
 
