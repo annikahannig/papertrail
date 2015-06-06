@@ -1,16 +1,19 @@
 package models
 
 import (
+	"golang.org/x/crypto/ssh"
 	"log"
 	"net"
 )
 
 type Node struct {
-	Id       string   `json:"id"`
-	Name     string   `json:"name"`
-	Hostname string   `json:"hostname"`
-	Uname    string   `json:"uname"`
-	Addr     net.Addr `json:"addr"`
+	Id                string          `json:"id"`
+	Name              string          `json:"name"`
+	Hostname          string          `json:"hostname"`
+	Uname             string          `json:"uname"`
+	Addr              net.Addr        `json:"addr"`
+	SshConn           *ssh.ServerConn `json:"-"`
+	SshSessionChannel *ssh.Channel    `json:"-"`
 }
 
 type NodeList []*Node

@@ -2,6 +2,7 @@ package sshServer
 
 import (
 	"fmt"
+	"github.com/mhannig/papertrail/server/models"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"log"
@@ -44,7 +45,7 @@ func loadPrivateKey(keyFile string) ssh.Signer {
 func NewSshServer(listen string, privateKeyFilename string) *Server {
 	server := Server{
 		Config: &ssh.ServerConfig{
-			PasswordCallback: authHandlePassword,
+		//	PasswordCallback: authHandlePassword,
 		},
 		Listen: listen,
 	}
@@ -91,18 +92,24 @@ func (self *Server) Serve() {
 			"SSH v.", string(sshConn.ClientVersion()),
 		)
 
+		// Connect node
+		node := &models.Node{
+			Addr:    sshConn.RemoteAddr(),
+			SshConn: sshConn,
+		}
+
 		// Discard OOB requests
 		go ssh.DiscardRequests(reqs)
 
 		// Handle SSH channels
-		go self.handleChannels(chans)
+		go self.handleChannels(node, chans)
 	}
 }
 
 /**
  * Establish SSH channels
  */
-func (self *Server) handleChannels(channels <-chan ssh.NewChannel) {
+func (self *Server) handleChannels(node *models.Node, channels <-chan ssh.NewChannel) {
 	for newChannel := range channels {
 		// Only allow session channeltypes
 		if newChannel.ChannelType() != "session" {
@@ -124,14 +131,20 @@ func (self *Server) handleChannels(channels <-chan ssh.NewChannel) {
 		// a successfully established SSH connection
 		// and an open SSH channel.
 		go self.handleSession(channel)
-
 	}
 }
 
 /**
  * Handle a single ssh session on a channel
  */
-func (self *Server) handleSession(channel ssh.Channel) {
-	banner := "Nothing to see here. yet."
-	channel.Write([]byte(banner))
+func (self *Server) handleSession(node *models.Node, channel ssh.Channel) {
+
+	// BYTES[0]:    message ID   (8bit)
+	// BYTES[1..4]: message Size (32bit)
+	// BYTES[5..]:  packed (protobuf) message (4294967296 bytes max)
+
+	// Send server info
+
+	// Read, decode, eval message loop
+
 }

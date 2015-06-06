@@ -1,0 +1,9 @@
+package sshServer
+
+const (
+	M_SERVER_INFO = iota
+	M_REGISTER_NODE
+	M_NODE_INFO
+	M_PRINT_JOB
+	M_PRINT_JOB_RESPONSE
+)
