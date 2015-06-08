@@ -1,4 +1,4 @@
-package sshServer
+package messages
 
 import (
 	"encoding/json"
@@ -47,7 +47,7 @@ type MsgJobResponse struct {
  * Encode / Decode messages
  */
 
-func EncodeMessage(id byte, message interface{}) ([]byte, error) {
+func Encode(id byte, message interface{}) ([]byte, error) {
 	var result []byte
 
 	// Encode json message
@@ -70,12 +70,58 @@ func EncodeMessage(id byte, message interface{}) ([]byte, error) {
 	// Append Json encoded message
 	result = append(result, jsonMessage...)
 
-	// Append network flush
-	result = append(result, '\n', '\r')
-
 	return result, err
 }
 
-func ReadMessage(channel ssh.Channel) (int, *interface{}) {
-	return M_SERVER_INFO, nil
+func Receive(channel ssh.Channel) (uint8, *interface{}, error) {
+	var (
+		size uint32
+		id   uint8
+		msg  interface{}
+	)
+
+	mid := make([]byte, 1)
+	msize := make([]byte, 4)
+
+	// read first byte (message id)
+	_, err := channel.Read(mid)
+	if err != nil {
+		return 255, nil, err
+	}
+	id = uint8(mid[0])
+
+	// Read 4 bytes (message size)
+	_, err = channel.Read(msize)
+	if err != nil {
+		return 255, nil, err
+	}
+
+	// Pack big endian size
+	size = uint32(msize[0])<<24 |
+		uint32(msize[1])<<16 |
+		uint32(msize[2])<<8 |
+		uint32(msize[3])<<0
+
+	payload := make([]byte, size)
+	_, err = channel.Read(payload)
+	if err != nil {
+		return 255, nil, err
+	}
+
+	switch id {
+	case M_SERVER_INFO:
+		msg = MsgServerInfo{}
+	case M_REGISTER_NODE:
+		msg = MsgRegisterNode{}
+	case M_REGISTER_NODE_RESPONSE:
+		msg = MsgRegisterNodeResponse{}
+	case M_PRINT_JOB:
+		msg = MsgPrintJob{}
+	case M_JOB_RESPONSE:
+		msg = MsgJobResponse{}
+	}
+
+	// Decode json message payload
+	err = json.Unmarshal(payload, &msg)
+	return id, &msg, err
 }

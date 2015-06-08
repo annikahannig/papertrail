@@ -2,11 +2,13 @@ package sshServer
 
 import (
 	"fmt"
+	"github.com/mhannig/papertrail/server/messages"
 	"github.com/mhannig/papertrail/server/models"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"log"
 	"net"
+	"time"
 )
 
 type Server struct {
@@ -144,15 +146,22 @@ func (self *Server) handleSession(node *models.Node, channel ssh.Channel) {
 	// BYTES[5..]:  packed (protobuf) message (4294967296 bytes max)
 
 	// Send server info
-	info := MsgServerInfo{
-		"1.0.2",
-		"Papertrail for the win.",
-		2,
-		1,
-	}
+	i := 0
+	for {
+		info := messages.MsgServerInfo{
+			"1.0.2",
+			"Papertrail for the win.",
+			i,
+			1,
+		}
 
-	msg, _ := EncodeMessage(M_SERVER_INFO, info)
-	channel.Write(msg)
+		msg, _ := messages.Encode(messages.M_SERVER_INFO, info)
+
+		channel.Write(msg)
+		i++
+
+		time.Sleep(time.Second * 1)
+	}
 
 	// Read, decode, eval message loop
 
