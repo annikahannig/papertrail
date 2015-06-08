@@ -1,16 +1,14 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
+	"github.com/mhannig/papertrail/server/messages"
 	"golang.org/x/crypto/ssh"
+	"io"
 	"log"
-	"strings"
-	"time"
 )
 
 func main() {
-	addr := "localhost:2342"
+	addr := "localhost:1992"
 
 	user := "node"
 	pass := "node"
@@ -33,25 +31,34 @@ func main() {
 	}
 	defer channel.Close()
 
-	reader := bufio.NewReader(channel)
-	go func() {
-		text := "Hallo!\n\r"
-		channel.Write([]byte(text))
-		time.Sleep(10 * time.Second)
-		text = "QUIT\n\r"
-		channel.Write([]byte(text))
-	}()
-
 	for {
-		text, err := reader.ReadString('\r')
+
+		_, msg, err := messages.Receive(channel)
 		if err != nil {
-			log.Println("[Ssh] Could not read.")
-			break
+			log.Println("Error while reading message:", err)
+			if err == io.EOF {
+				break
+			}
+			continue
 		}
 
-		text = strings.Trim(text, "\n\r")
+		log.Println(*msg)
 
-		fmt.Println("RECV:", text, "")
 	}
+
+	/*
+		reader := bufio.NewReader(channel)
+		for {
+			text, err := reader.ReadString('\r')
+			if err != nil {
+				log.Println("[Ssh] Could not read.")
+				break
+			}
+
+			text = strings.Trim(text, "\n\r")
+
+			fmt.Println("RECV:", text, "")
+		}
+	*/
 
 }
