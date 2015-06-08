@@ -22,13 +22,10 @@ import (
 )
 
 /**
- * Initialize Papertrail and display some banner.
+ * Run Papertrail and display some banner.
  */
-func init() {
-	log.Println("Papertrail 1.0.0                   (c) 2015 Matthias Hannig")
-}
-
 func main() {
+	log.Println("Papertrail 1.0.0                   (c) 2015 Matthias Hannig")
 
 	// Flags
 	configFilename := flag.String(
