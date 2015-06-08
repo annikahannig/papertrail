@@ -1,3 +1,6 @@
 
 papertrail-node
 
+etc/papertrail-node.conf
+etc/papertrail-node.local.conf
+
