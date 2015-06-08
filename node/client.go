@@ -1,64 +1,40 @@
 package main
 
 import (
-	"github.com/mhannig/papertrail/server/messages"
-	"golang.org/x/crypto/ssh"
-	"io"
+	"flag"
+	"github.com/mhannig/papertrail/node/config"
+	"github.com/mhannig/papertrail/node/ssh"
 	"log"
+	"time"
 )
 
 func main() {
-	addr := "localhost:1992"
+	// Banner
+	log.Println("Papertrail Node 1.0.0                  (c) 2015 Matthias Hannig")
 
-	user := "node"
-	pass := "node"
+	// Flags
+	configFilename := flag.String(
+		"config",
+		"./etc/papertrail-node.conf",
+		"Configuration file")
 
-	sshConfig := ssh.ClientConfig{
-		User: user,
-		Auth: []ssh.AuthMethod{ssh.Password(pass)},
-	}
+	flag.Parse()
 
-	client, err := ssh.Dial("tcp", addr, &sshConfig)
+	// Load config
+	err := appconfig.Load(*configFilename)
 	if err != nil {
-		log.Fatal("[Ssh] Could not connect:", err)
+		log.Fatal("[Config] Could not open config:", err)
 	}
-	defer client.Close()
 
-	// Open channel
-	channel, _, err := client.OpenChannel("session", nil)
-	if err != nil {
-		log.Fatal("[Ssh] Could not open channel.")
-	}
-	defer channel.Close()
-
+	// Main loop; reconnect if connection was interrupted
 	for {
-
-		_, msg, err := messages.Receive(channel)
+		// Connect to papertrail server
+		err = sshClient.Dial(appconfig.Cfg.Server)
 		if err != nil {
-			log.Println("Error while reading message:", err)
-			if err == io.EOF {
-				break
-			}
-			continue
+			log.Println(err)
 		}
 
-		log.Println(*msg)
-
+		log.Println("Disconnected from server: Reconnecting in 14 seconds.")
+		time.Sleep(time.Second * 14)
 	}
-
-	/*
-		reader := bufio.NewReader(channel)
-		for {
-			text, err := reader.ReadString('\r')
-			if err != nil {
-				log.Println("[Ssh] Could not read.")
-				break
-			}
-
-			text = strings.Trim(text, "\n\r")
-
-			fmt.Println("RECV:", text, "")
-		}
-	*/
-
 }
