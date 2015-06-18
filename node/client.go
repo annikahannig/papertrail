@@ -10,7 +10,7 @@ import (
 
 func main() {
 	// Banner
-	log.Println("Papertrail Node 1.0.0                  (c) 2015 Matthias Hannig")
+	log.Println("Papertrail Node 1.0.0               (c) 2015 Matthias Hannig")
 
 	// Flags
 	configFilename := flag.String(
@@ -25,6 +25,9 @@ func main() {
 	if err != nil {
 		log.Fatal("[Config] Could not open config:", err)
 	}
+
+	// Initialize node configuration
+	sshClient.InitNode()
 
 	// Main loop; reconnect if connection was interrupted
 	for {

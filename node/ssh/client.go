@@ -1,10 +1,8 @@
 package sshClient
 
 import (
-	"fmt"
 	"github.com/mhannig/papertrail/server/messages"
 	"golang.org/x/crypto/ssh"
-	"io"
 	"log"
 )
 
@@ -18,7 +16,7 @@ const (
 	S_READY
 )
 
-var state uint8
+var clientState uint8
 
 // Helper: Print Server Info
 func PrintServerInfo(info messages.MsgServerInfo) {
@@ -41,6 +39,9 @@ func Dial(addr string) error {
 	user := "node"
 	pass := "node"
 
+	// Start papertrail node
+	clientState = S_DISCONNECTED
+
 	sshConfig := ssh.ClientConfig{
 		User: user,
 		Auth: []ssh.AuthMethod{ssh.Password(pass)},
@@ -61,32 +62,11 @@ func Dial(addr string) error {
 
 	// Main receive and respond loop
 	for {
-
-		// Receive and decode message from Channel
-		messageId, msg, err := messages.Receive(channel)
+		err := handleMessages(channel)
 		if err != nil {
-			log.Println("Error while reading message:", err)
-			if err == io.EOF {
-				break
-			}
-			continue
+			log.Println(err)
+			break // Close connection
 		}
-
-		// Implement papertrail protocol
-		switch state {
-		case S_DISCONNECTED:
-			if messageId != messages.M_SERVER_INFO { // Protocol violation
-				return fmt.Errorf("Received non ServerInfo message while disconnected")
-			}
-			serverInfo, ok := msg.(messages.MsgServerInfo)
-			if ok == false {
-				continue
-			}
-			// Print server info
-			PrintServerInfo(serverInfo)
-			PrintMotd(serverInfo)
-		}
-
 	}
 
 	return nil
