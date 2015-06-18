@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"time"
 )
 
 type Server struct {
@@ -147,22 +146,21 @@ func (self *Server) handleSession(node *models.Node, channel ssh.Channel) {
 
 	// Send server info
 	i := 0
-	for {
-		info := messages.MsgServerInfo{
-			"1.0.2",
-			"Papertrail for the win.",
-			i,
-			1,
-		}
-
-		msg, _ := messages.Encode(messages.M_SERVER_INFO, info)
-
-		channel.Write(msg)
-		i++
-
-		time.Sleep(time.Second * 1)
+	info := messages.MsgServerInfo{
+		"1.0.2",
+		"Papertrail for the win.",
+		i,
+		1,
 	}
 
-	// Read, decode, eval message loop
+	msg, _ := messages.Encode(messages.M_SERVER_INFO, info)
+	channel.Write(msg)
 
+	for {
+		err := handleMessages(channel)
+		if err != nil {
+			log.Println("Could not read message:", err)
+			break
+		}
+	}
 }
